@@ -2,9 +2,9 @@ services:
   - type: web
     name: oasis-travel
     env: node
-    buildCommand: cd backend && npm install
+    buildCommand: npm install
     startCommand: node server.js
-    workingDir: backend
+    rootDir: backend
     envVars:
       - key: NODE_VERSION
         value: 18
