@@ -1,0 +1,71 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تقرير الحجوزات</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    th { background: #e3f2fd; }
+    #total { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>📊 تقرير الحجوزات</h2>
+  <table id="reportTable">
+    <thead>
+      <tr>
+        <th>الاسم</th>
+        <th>الهاتف</th>
+        <th>المدينة</th>
+        <th>الفندق</th>
+        <th>عدد الأفراد</th>
+        <th>المدفوع</th>
+        <th>الباقي</th>
+        <th>تاريخ الوصول</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div id="total"></div>
+
+  <script>
+    async function loadReport() {
+      const res = await fetch("/api/reservations");
+      const data = await res.json();
+      const table = document.querySelector("#reportTable tbody");
+      let totalPaid = 0;
+      let totalRemaining = 0;
+      let totalPeople = 0;
+
+      if (data.success) {
+        data.reservations.forEach(r => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${r.name}</td>
+            <td>${r.phone}</td>
+            <td>${r.city}</td>
+            <td>${r.hotel}</td>
+            <td>${r.peopleCount}</td>
+            <td>${r.paid}</td>
+            <td>${r.remaining}</td>
+            <td>${(r.arrivalDate || "").slice(0, 10)}</td>
+          `;
+          table.appendChild(tr);
+          totalPaid += parseFloat(r.paid || 0);
+          totalRemaining += parseFloat(r.remaining || 0);
+          totalPeople += parseInt(r.peopleCount || 0);
+        });
+      }
+
+      document.getElementById("total").innerText =
+        `👥 إجمالي الأفراد: ${totalPeople} | 💰 المدفوع: ${totalPaid} جم | 💸 الباقي: ${totalRemaining} جم`;
+    }
+
+    document.addEventListener("DOMContentLoaded", loadReport);
+  </script>
+</body>
+</html>

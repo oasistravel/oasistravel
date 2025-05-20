@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>إدارة الفنادق</title>
+  <style>
+    body { font-family: Arial; background: #f5f5f5; padding: 20px; }
+    table { width: 100%; background: #fff; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    th { background-color: #e3f2fd; }
+    input { padding: 8px; width: 100%; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; }
+    button {
+      padding: 8px 15px;
+      background-color: #0d6efd;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    .danger { background: #e53935; }
+    .secondary { background: #6c757d; }
+  </style>
+</head>
+<body>
+  <h2>🏨 إدارة الفنادق</h2>
+
+  <div style="background: #fff; padding: 15px; border-radius: 8px;">
+    <h3>إضافة فندق جديد</h3>
+    <input id="name" placeholder="اسم الفندق" />
+    <input id="city" placeholder="المدينة" />
+    <input id="stars" placeholder="عدد النجوم" type="number" />
+    <input id="roomsCount" placeholder="عدد الغرف" type="number" />
+    <button onclick="addHotel()">إضافة</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>اسم الفندق</th>
+        <th>المدينة</th>
+        <th>النجوم</th>
+        <th>عدد الغرف</th>
+        <th>الإجراء</th>
+      </tr>
+    </thead>
+    <tbody id="hotelBody"></tbody>
+  </table>
+
+  <script>
+    async function fetchHotels() {
+      const res = await fetch("/api/hotels");
+      const data = await res.json();
+      const body = document.getElementById("hotelBody");
+      body.innerHTML = "";
+      if (data.success) {
+        data.hotels.forEach(h => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><input value="${h.name}" onchange="updateField('${h._id}', 'name', this.value)" /></td>
+            <td><input value="${h.city}" onchange="updateField('${h._id}', 'city', this.value)" /></td>
+            <td><input type="number" value="${h.stars}" onchange="updateField('${h._id}', 'stars', this.value)" /></td>
+            <td><input type="number" value="${h.roomsCount}" onchange="updateField('${h._id}', 'roomsCount', this.value)" /></td>
+            <td><button class="danger" onclick="deleteHotel('${h._id}')">حذف</button></td>
+          `;
+          body.appendChild(tr);
+        });
+      }
+    }
+
+    async function addHotel() {
+      const name = document.getElementById("name").value;
+      const city = document.getElementById("city").value;
+      const stars = document.getElementById("stars").value;
+      const roomsCount = document.getElementById("roomsCount").value;
+
+      const res = await fetch("/api/hotels", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, city, stars, roomsCount })
+      });
+
+      const result = await res.json();
+      if (result.success) {
+        fetchHotels();
+        document.getElementById("name").value = "";
+        document.getElementById("city").value = "";
+        document.getElementById("stars").value = "";
+        document.getElementById("roomsCount").value = "";
+      }
+    }
+
+    async function updateField(id, field, value) {
+      const res = await fetch("/api/hotels/" + id, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: value })
+      });
+      await res.json();
+    }
+
+    async function deleteHotel(id) {
+      if (!confirm("هل أنت متأكد من حذف الفندق؟")) return;
+      await fetch("/api/hotels/" + id, { method: "DELETE" });
+      fetchHotels();
+    }
+
+    document.addEventListener("DOMContentLoaded", fetchHotels);
+  </script>
+</body>
+</html>

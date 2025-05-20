@@ -1,0 +1,31 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تقرير الفواتير</title>
+</head>
+<body>
+  <h3>📋 تقرير الفواتير</h3>
+  <table id="invoiceTable">
+    <tr>
+      <th>رقم الفاتورة</th><th>العميل</th><th>الإجمالي</th><th>حذف</th>
+    </tr>
+    <tr>
+      <td>INV001</td><td>أحمد</td><td>1500</td>
+      <td><button class="deleteBtn">🗑 حذف</button></td>
+    </tr>
+    <tr>
+      <td>INV002</td><td>منى</td><td>1800</td>
+      <td><button class="deleteBtn">🗑 حذف</button></td>
+    </tr>
+  </table>
+
+  <script>
+    const role = localStorage.getItem("role");
+    if (role !== "admin") {
+      document.querySelectorAll(".deleteBtn").forEach(btn => btn.style.display = "none");
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>نظام الموارد البشرية HR</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: 'Cairo', sans-serif; padding: 30px; background: #f7f7f7; text-align: center; }
+    h2 { margin-bottom: 25px; }
+    .section { background: white; margin-bottom: 30px; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
+    .section h3 { margin-bottom: 15px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    th { background: #eee; }
+    form input, form select, form button {
+      padding: 8px; margin: 5px 0; width: 100%; max-width: 300px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🧑‍💼 نظام الموارد البشرية HR</h2>
+
+  <!-- تسجيل الحضور -->
+  <div class="section">
+    <h3>📌 تسجيل الحضور</h3>
+    <form id="attendanceForm">
+      <select id="employeeSelect"></select>
+      <input type="date" id="attendanceDate" required />
+      <select id="statusSelect">
+        <option value="حضور">حضور</option>
+        <option value="غياب">غياب</option>
+      </select>
+      <button type="submit">💾 تسجيل</button>
+    </form>
+    <table><thead><tr><th>الموظف</th><th>التاريخ</th><th>الحالة</th></tr></thead><tbody id="attendanceTable"></tbody></table>
+  </div>
+
+  <!-- إدارة الموظفين -->
+  <div class="section">
+    <h3>👥 إدارة الموظفين</h3>
+    <form id="employeeForm">
+      <input type="text" id="empName" placeholder="الاسم" required />
+      <input type="text" id="empJob" placeholder="الوظيفة" required />
+      <input type="number" id="empSalary" placeholder="الراتب الأساسي" required />
+      <button type="submit">➕ إضافة</button>
+    </form>
+    <table><thead><tr><th>الاسم</th><th>الوظيفة</th><th>الراتب</th><th>🗑</th></tr></thead><tbody id="employeeTable"></tbody></table>
+  </div>
+
+  <!-- العمولات -->
+  <div class="section">
+    <h3>💼 العمولات</h3>
+    <form id="commissionForm">
+      <select id="commissionEmployee"></select>
+      <input type="number" id="commissionAmount" placeholder="قيمة العمولة" required />
+      <input type="date" id="commissionDate" required />
+      <button type="submit">➕ تسجيل عمولة</button>
+    </form>
+    <table><thead><tr><th>الموظف</th><th>القيمة</th><th>التاريخ</th></tr></thead><tbody id="commissionTable"></tbody></table>
+  </div>
+
+  <!-- الرواتب -->
+  <div class="section">
+    <h3>💰 الرواتب</h3>
+    <button onclick="calculateSalaries()">📊 حساب الرواتب</button>
+    <table><thead><tr><th>الموظف</th><th>الراتب</th><th>الحضور</th><th>الغياب</th><th>العمولات</th><th>الإجمالي</th></tr></thead><tbody id="salaryTable"></tbody></table>
+  </div>
+
+<script>
+function fillEmployees() {
+  fetch("/api/employees").then(res => res.json()).then(data => {
+    const empSelects = [document.getElementById("employeeSelect"), document.getElementById("commissionEmployee")];
+    empSelects.forEach(sel => {
+      sel.innerHTML = "";
+      data.forEach(emp => {
+        const opt = document.createElement("option");
+        opt.value = emp._id;
+        opt.textContent = emp.name;
+        sel.appendChild(opt);
+      });
+    });
+    renderEmployees(data);
+  });
+}
+
+document.getElementById("employeeForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const data = {
+    name: document.getElementById("empName").value,
+    job: document.getElementById("empJob").value,
+    salary: parseFloat(document.getElementById("empSalary").value)
+  };
+  fetch("/api/employees", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
+  }).then(() => { fillEmployees(); e.target.reset(); });
+});
+
+function renderEmployees(data) {
+  const tbody = document.getElementById("employeeTable");
+  tbody.innerHTML = "";
+  data.forEach(emp => {
+    tbody.innerHTML += `<tr><td>${emp.name}</td><td>${emp.job}</td><td>${emp.salary}</td><td><button onclick="deleteEmployee('${emp._id}')">🗑</button></td></tr>`;
+  });
+}
+
+function deleteEmployee(id) {
+  if (!confirm("هل تريد حذف الموظف؟")) return;
+  fetch("/api/employees/" + id, { method: "DELETE" }).then(() => fillEmployees());
+}
+
+document.getElementById("attendanceForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const data = {
+    employee: document.getElementById("employeeSelect").value,
+    date: document.getElementById("attendanceDate").value,
+    status: document.getElementById("statusSelect").value
+  };
+  fetch("/api/attendance", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
+  }).then(() => loadAttendance());
+});
+
+function loadAttendance() {
+  fetch("/api/attendance").then(res => res.json()).then(data => {
+    const tbody = document.getElementById("attendanceTable");
+    tbody.innerHTML = "";
+    data.forEach(a => {
+      tbody.innerHTML += `<tr><td>${a.employee?.name}</td><td>${a.date}</td><td>${a.status}</td></tr>`;
+    });
+  });
+}
+
+document.getElementById("commissionForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const data = {
+    employee: document.getElementById("commissionEmployee").value,
+    amount: parseFloat(document.getElementById("commissionAmount").value),
+    date: document.getElementById("commissionDate").value
+  };
+  fetch("/api/commissions", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
+  }).then(() => loadCommissions());
+});
+
+function loadCommissions() {
+  fetch("/api/commissions").then(res => res.json()).then(data => {
+    const tbody = document.getElementById("commissionTable");
+    tbody.innerHTML = "";
+    data.forEach(c => {
+      tbody.innerHTML += `<tr><td>${c.employee?.name}</td><td>${c.amount}</td><td>${c.date}</td></tr>`;
+    });
+  });
+}
+
+function calculateSalaries() {
+  fetch("/api/salaries").then(res => res.json()).then(data => {
+    const tbody = document.getElementById("salaryTable");
+    tbody.innerHTML = "";
+    data.forEach(s => {
+      tbody.innerHTML += `<tr><td>${s.name}</td><td>${s.base}</td><td>${s.present}</td><td>${s.absent}</td><td>${s.commission}</td><td>${s.total}</td></tr>`;
+    });
+  });
+}
+
+window.onload = () => {
+  fillEmployees();
+  loadAttendance();
+  loadCommissions();
+};
+</script>
+
+<script src="/role-check.js"></script>
+<script>protectPage(["admin", "hr"])</script>
+</body>
+
+</html>

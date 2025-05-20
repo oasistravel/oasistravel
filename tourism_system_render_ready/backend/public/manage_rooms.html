@@ -1,0 +1,109 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>إدارة الغرف</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: 'Cairo', sans-serif; background-color: #f9f9f9; padding: 30px; }
+    h3 { text-align: center; margin-bottom: 20px; }
+    form, table { max-width: 600px; margin: auto; }
+    input, select, button { padding: 10px; margin: 5px 0; width: 100%; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #fff; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background-color: #eee; }
+  </style>
+</head>
+<body>
+  <h3>🛏️ إدارة الغرف الفندقية</h3>
+
+  <form id="roomForm">
+    <label>رقم الغرفة:</label>
+    <input type="text" id="roomNumber" required />
+    <label>نوع الغرفة:</label>
+    <select id="roomType">
+      <option value="سنجل">سنجل</option>
+      <option value="دبل">دبل</option>
+      <option value="تريبل">تريبل</option>
+    </select>
+    <label>الفندق:</label>
+    <select id="hotelSelect"></select>
+    <button type="submit">➕ إضافة غرفة</button>
+  </form>
+
+  <table>
+    <thead>
+      <tr><th>الرقم</th><th>النوع</th><th>الفندق</th><th>حذف</th></tr>
+    </thead>
+    <tbody id="roomTableBody"></tbody>
+  </table>
+
+<script>
+function loadHotels() {
+  fetch('/api/hotels')
+    .then(res => res.json())
+    .then(data => {
+      const select = document.getElementById("hotelSelect");
+      select.innerHTML = "";
+      data.forEach(h => {
+        const opt = document.createElement("option");
+        opt.value = h._id;
+        opt.text = h.name;
+        select.appendChild(opt);
+      });
+    });
+}
+
+function loadRooms() {
+  fetch('/api/rooms')
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.getElementById("roomTableBody");
+      tbody.innerHTML = "";
+      data.forEach(r => {
+        const row = `<tr>
+          <td>${r.number}</td>
+          <td>${r.type}</td>
+          <td>${r.hotel?.name || ""}</td>
+          <td><button onclick="deleteRoom('${r._id}')">🗑</button></td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+    });
+}
+
+function deleteRoom(id) {
+  if (!confirm("هل تريد حذف هذه الغرفة؟")) return;
+  fetch('/api/rooms/' + id, { method: 'DELETE' })
+    .then(() => loadRooms());
+}
+
+document.getElementById("roomForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+  const data = {
+    number: document.getElementById("roomNumber").value,
+    type: document.getElementById("roomType").value,
+    hotel: document.getElementById("hotelSelect").value
+  };
+  fetch('/api/rooms', {
+    method: "POST",
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).then(() => {
+    loadRooms();
+    this.reset();
+  });
+});
+
+window.onload = () => {
+  loadHotels();
+  loadRooms();
+};
+</script>
+
+<script src="/role-check.js"></script>
+<script>protectPage(["admin"]);</script>
+</body>
+
+</html>

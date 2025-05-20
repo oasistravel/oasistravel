@@ -1,0 +1,117 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تقرير شهري - الإيرادات والمصروفات</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: 'Cairo', sans-serif; padding: 30px; background: #f5f5f5; text-align: center; }
+    h3 { margin-bottom: 20px; }
+    .filters { margin-bottom: 20px; }
+    select, button { padding: 8px 12px; font-size: 16px; margin-left: 8px; }
+    table { width: 90%; margin: 20px auto; border-collapse: collapse; background: #fff; }
+    th, td { border: 1px solid #ccc; padding: 10px; }
+    th { background-color: #eee; }
+    .summary { margin-top: 30px; background: #fff; padding: 20px; display: inline-block; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
+    .summary p { font-size: 18px; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h3>📅 التقرير الشهري للإيرادات والمصروفات</h3>
+
+  <div class="filters">
+    <label>الشهر:</label>
+    <select id="monthSelect">
+      <option value="01">يناير</option><option value="02">فبراير</option>
+      <option value="03">مارس</option><option value="04">أبريل</option>
+      <option value="05">مايو</option><option value="06">يونيو</option>
+      <option value="07">يوليو</option><option value="08">أغسطس</option>
+      <option value="09">سبتمبر</option><option value="10">أكتوبر</option>
+      <option value="11">نوفمبر</option><option value="12">ديسمبر</option>
+    </select>
+
+    <label>السنة:</label>
+    <select id="yearSelect"></select>
+
+    <button onclick="loadMonthlyReport()">عرض</button>
+  </div>
+
+  <h4>💰 الإيرادات</h4>
+  <table>
+    <thead><tr><th>العميل</th><th>التاريخ</th><th>المدينة</th><th>المدفوع</th></tr></thead>
+    <tbody id="monthlyIncomeBody"></tbody>
+  </table>
+
+  <h4>💸 المصروفات</h4>
+  <table>
+    <thead><tr><th>البند</th><th>المبلغ</th><th>التاريخ</th></tr></thead>
+    <tbody id="monthlyExpensesBody"></tbody>
+  </table>
+
+  <div class="summary">
+    <p>💵 إجمالي الإيرادات: <span id="totalMonthlyIncome">0</span> جنيه</p>
+    <p>💸 إجمالي المصروفات: <span id="totalMonthlyExpenses">0</span> جنيه</p>
+    <p><strong>📊 صافي الربح: <span id="monthlyNetProfit">0</span> جنيه</strong></p>
+  </div>
+
+<script>
+function populateYears() {
+  const yearSelect = document.getElementById("yearSelect");
+  const currentYear = new Date().getFullYear();
+  for (let y = currentYear; y >= currentYear - 5; y--) {
+    const opt = document.createElement("option");
+    opt.value = y;
+    opt.textContent = y;
+    yearSelect.appendChild(opt);
+  }
+}
+
+function loadMonthlyReport() {
+  const month = document.getElementById("monthSelect").value;
+  const year = document.getElementById("yearSelect").value;
+
+  Promise.all([
+    fetch(`/api/report/monthly-income?month=${month}&year=${year}`).then(res => res.json()),
+    fetch(`/api/report/monthly-expenses?month=${month}&year=${year}`).then(res => res.json())
+  ]).then(([incomes, expenses]) => {
+    let incomeTotal = 0;
+    let expenseTotal = 0;
+
+    const incomeBody = document.getElementById("monthlyIncomeBody");
+    incomeBody.innerHTML = "";
+    incomes.forEach(i => {
+      incomeTotal += i.paid;
+      incomeBody.innerHTML += `<tr>
+        <td>${i.customer?.name || ""}</td>
+        <td>${i.travelDate}</td>
+        <td>${i.city}</td>
+        <td>${i.paid}</td>
+      </tr>`;
+    });
+
+    const expenseBody = document.getElementById("monthlyExpensesBody");
+    expenseBody.innerHTML = "";
+    expenses.forEach(e => {
+      expenseTotal += e.amount;
+      expenseBody.innerHTML += `<tr>
+        <td>${e.category}</td>
+        <td>${e.amount}</td>
+        <td>${e.date}</td>
+      </tr>`;
+    });
+
+    document.getElementById("totalMonthlyIncome").innerText = incomeTotal;
+    document.getElementById("totalMonthlyExpenses").innerText = expenseTotal;
+    document.getElementById("monthlyNetProfit").innerText = incomeTotal - expenseTotal;
+  });
+}
+
+window.onload = populateYears;
+</script>
+
+<script src="/role-check.js"></script>
+<script>protectPage(['admin', 'accountant', 'viewer']);</script>
+</body>
+
+</html>

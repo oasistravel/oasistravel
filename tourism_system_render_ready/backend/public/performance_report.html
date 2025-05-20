@@ -1,0 +1,83 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>تقرير الأداء والإيرادات</title>
+  <style>
+    body { font-family: Arial; background: #f5f5f5; padding: 20px; }
+    h2 { text-align: center; margin-bottom: 20px; }
+    .filters, .summary { text-align: center; margin-bottom: 20px; }
+    .filters input { padding: 6px 10px; border-radius: 5px; border: 1px solid #ccc; margin: 0 5px; }
+    .card {
+      display: inline-block; width: 200px; margin: 10px;
+      background: white; padding: 15px; border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1); text-align: center;
+    }
+    .card h3 { margin: 0; font-size: 20px; color: #00796b; }
+    .card p { font-size: 18px; margin-top: 5px; }
+  </style>
+</head>
+<body>
+  <h2>📊 تقرير الأداء والإيرادات</h2>
+
+  <div class="filters">
+    <label>من:</label>
+    <input type="date" id="startDate" onchange="loadSummary()" />
+    <label>إلى:</label>
+    <input type="date" id="endDate" onchange="loadSummary()" />
+  </div>
+
+  <div class="summary">
+    <div class="card">
+      <h3>📄 عدد الفواتير</h3>
+      <p id="invoiceCount">0</p>
+    </div>
+    <div class="card">
+      <h3>💰 إجمالي المدفوع</h3>
+      <p id="totalPaid">0</p>
+    </div>
+    <div class="card">
+      <h3>💸 إجمالي الباقي</h3>
+      <p id="totalRemaining">0</p>
+    </div>
+    <div class="card">
+      <h3>👥 عدد الأفراد</h3>
+      <p id="totalPeople">0</p>
+    </div>
+  </div>
+
+  <script>
+    async function loadSummary() {
+      const start = document.getElementById("startDate").value;
+      const end = document.getElementById("endDate").value;
+      const query = [];
+
+      if (start) query.push("startDate=" + start);
+      if (end) query.push("endDate=" + end);
+
+      const url = "/api/invoices?" + query.join("&");
+
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.success) {
+        const invoices = data.invoices;
+        let totalPaid = 0, totalRemaining = 0, totalPeople = 0;
+
+        invoices.forEach(inv => {
+          totalPaid += Number(inv.paid || 0);
+          totalRemaining += Number(inv.remaining || 0);
+          totalPeople += Number(inv.peopleCount || 0);
+        });
+
+        document.getElementById("invoiceCount").textContent = invoices.length;
+        document.getElementById("totalPaid").textContent = totalPaid.toLocaleString();
+        document.getElementById("totalRemaining").textContent = totalRemaining.toLocaleString();
+        document.getElementById("totalPeople").textContent = totalPeople.toLocaleString();
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadSummary);
+  </script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+
+<div style="padding: 20px;">
+  <h2>عرض الحجوزات</h2>
+  <p>هنا يتم عرض جميع الحجوزات المسجلة.</p>
+<button onclick="createInvoiceFromReservation('ID_الحجز')">إنشاء فاتورة</button>
+
+  <!-- Placeholder table -->
+  <table border="1" width="100%" style="margin-top: 20px; border-collapse: collapse;">
+    <thead>
+      <tr>
+        <th>الاسم</th>
+        <th>رقم الموبايل</th>
+        <th>المدينة</th>
+        <th>الفندق</th>
+        <th>تاريخ الوصول</th>
+        <th>تاريخ المغادرة</th>
+        <th>عدد الأفراد</th>
+        <th>إجمالي</th>
+      </tr>
+    </thead>
+    <tbody id="reservationsTable">
+      <!-- يتم تعبئته بالبيانات -->
+    </tbody>
+  </table>
+</div>
+<script>
+  fetch("/api/reservations")
+    .then(res => res.json())
+    .then(data => {
+      const table = document.getElementById("reservationsTable");
+      data.forEach(r => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${r.name}</td>
+          <td>${r.phone}</td>
+          <td>${r.city}</td>
+          <td>${r.hotel}</td>
+          <td>${r.arrivalDate?.slice(0,10)}</td>
+          <td>${r.departureDate?.slice(0,10)}</td>
+          <td>${r.peopleCount}</td>
+          <td>${r.total}</td>
+        `;
+        table.appendChild(row);
+      });
+    });
+</script>

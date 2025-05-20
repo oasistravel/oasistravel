@@ -1,0 +1,107 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تقرير أرباح كل خزنة</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #f4f6f9; padding: 40px; font-family: 'Segoe UI', sans-serif; }
+    h2 { color: #0d6efd; margin-bottom: 25px; }
+    .table th, .table td { text-align: center; vertical-align: middle !important; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 class="text-center">💼 تقرير أرباح كل خزنة</h2>
+
+    <div class="row mb-4">
+      <div class="col-md-4">
+        <label>من تاريخ</label>
+        <input type="date" class="form-control" id="startDate">
+      </div>
+      <div class="col-md-4">
+        <label>إلى تاريخ</label>
+        <input type="date" class="form-control" id="endDate">
+      </div>
+      <div class="col-md-4 d-flex align-items-end">
+        <button class="btn btn-primary w-100" onclick="loadCashboxReport()">عرض التقرير</button>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped" id="cashboxTable">
+        <thead class="table-info">
+          <tr>
+            <th>اسم الخزنة</th>
+            <th>العملة</th>
+            <th>إجمالي الإيداع</th>
+            <th>إجمالي السحب</th>
+            <th>الرصيد النهائي</th>
+          </tr>
+        </thead>
+        <tbody id="reportBody">
+          <tr><td colspan="5">جاري التحميل...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    async function loadCashboxReport() {
+      const startDate = document.getElementById("startDate").value;
+      const endDate = document.getElementById("endDate").value;
+
+      let url = "/api/transactions";
+      const params = [];
+      if (startDate) params.push("startDate=" + startDate);
+      if (endDate) params.push("endDate=" + endDate);
+      if (params.length > 0) url += "?" + params.join("&");
+
+      const res = await fetch(url);
+      const data = await res.json();
+      const tbody = document.getElementById("reportBody");
+      tbody.innerHTML = "";
+
+      if (data.success) {
+        const map = {};
+
+        data.list.forEach(t => {
+          const id = t.cashboxId?._id;
+          if (!id) return;
+          if (!map[id]) {
+            map[id] = {
+              name: t.cashboxId.name,
+              currency: t.cashboxId.currency,
+              in: 0,
+              out: 0
+            };
+          }
+          if (t.type === "in") map[id].in += t.amount;
+          if (t.type === "out") map[id].out += t.amount;
+        });
+
+        Object.values(map).forEach(cb => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${cb.name}</td>
+            <td>${cb.currency}</td>
+            <td>${cb.in.toLocaleString()}</td>
+            <td>${cb.out.toLocaleString()}</td>
+            <td>${(cb.in - cb.out).toLocaleString()}</td>
+          `;
+          tbody.appendChild(row);
+        });
+
+        if (Object.keys(map).length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5">لا توجد بيانات في الفترة المحددة</td></tr>';
+        }
+      } else {
+        tbody.innerHTML = '<tr><td colspan="5">❌ فشل في تحميل البيانات</td></tr>';
+      }
+    }
+
+    loadCashboxReport();
+  </script>
+</body>
+</html>

@@ -1,0 +1,157 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>إدارة الخزن</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f1f5f9;
+      padding: 40px;
+      direction: rtl;
+    }
+    h1 {
+      text-align: center;
+      color: #1e3a8a;
+    }
+    form, table {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin-top: 15px;
+      padding: 12px;
+      width: 100%;
+      background: #1e40af;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    th {
+      background: #1e3a8a;
+      color: white;
+    }
+    .note {
+      color: #666;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <h1>إدارة الخزن</h1>
+
+  <form id="cashboxForm">
+    <label>اسم الشركة</label>
+    <input type="text" id="company" required>
+
+    <label>اسم الخزنة</label>
+    <input type="text" id="name" required>
+
+    <label>العملة</label>
+    <select id="currency" required>
+      <option value="EGP">جنيه</option>
+      <option value="USD">دولار</option>
+      <option value="EUR">يورو</option>
+    </select>
+
+    <label>رصيد البداية</label>
+    <input type="number" id="initialBalance" required>
+
+    <label>ملاحظات</label>
+    <input type="text" id="notes">
+
+    <button type="submit">➕ إنشاء خزنة</button>
+    <div id="msg" class="note"></div>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th>الشركة</th>
+        <th>الخزنة</th>
+        <th>العملة</th>
+        <th>الرصيد الحالي</th>
+        <th>ملاحظات</th>
+      </tr>
+    </thead>
+    <tbody id="cashboxTable"></tbody>
+  </table>
+
+  <script>
+    document.getElementById("cashboxForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const data = {
+        company: document.getElementById("company").value,
+        name: document.getElementById("name").value,
+        currency: document.getElementById("currency").value,
+        initialBalance: parseFloat(document.getElementById("initialBalance").value),
+        currentBalance: parseFloat(document.getElementById("initialBalance").value),
+        notes: document.getElementById("notes").value
+      };
+      const res = await fetch("/api/cashboxes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      const result = await res.json();
+      document.getElementById("msg").textContent = result.message;
+      if (result.success) {
+        document.getElementById("cashboxForm").reset();
+        loadCashboxes();
+      }
+    });
+
+    async function loadCashboxes() {
+      const res = await fetch("/api/cashboxes");
+      const data = await res.json();
+      const tbody = document.getElementById("cashboxTable");
+      tbody.innerHTML = "";
+      if (data.success) {
+        data.list.forEach(item => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${item.company}</td>
+            <td>${item.name}</td>
+            <td>${item.currency}</td>
+            <td>${item.currentBalance}</td>
+            <td>${item.notes || "-"}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+    }
+
+    loadCashboxes();
+  </script>
+</body>
+</html>

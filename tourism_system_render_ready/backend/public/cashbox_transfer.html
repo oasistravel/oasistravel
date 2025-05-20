@@ -1,0 +1,88 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>🔁 تحويل بين الخزن</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+</head>
+<body class="bg-light p-4">
+  <div class="container bg-white p-4 rounded shadow">
+    <h3 class="text-center text-primary mb-4">🔁 تحويل بين الخزن</h3>
+
+    <form id="transferForm" class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">الخزنة المرسلة</label>
+        <select class="form-control" name="from" id="fromCashbox" required></select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">الخزنة المستقبلة</label>
+        <select class="form-control" name="to" id="toCashbox" required></select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">العملة</label>
+        <input class="form-control" name="currency" id="currency" readonly />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">المبلغ</label>
+        <input type="number" step="0.01" class="form-control" name="amount" required />
+      </div>
+      <div class="col-12">
+        <label class="form-label">الوصف</label>
+        <input type="text" class="form-control" name="description" placeholder="مثال: تحويل داخلي" />
+      </div>
+      <div class="col-12 text-center">
+        <button class="btn btn-primary px-4">🔁 تنفيذ التحويل</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const from = document.getElementById("fromCashbox");
+    const to = document.getElementById("toCashbox");
+    const currencyField = document.getElementById("currency");
+
+    let cashboxes = [];
+
+    fetch("/api/cashboxes")
+      .then(res => res.json())
+      .then(data => {
+        cashboxes = data.list;
+        cashboxes.forEach(cb => {
+          const option1 = document.createElement("option");
+          option1.value = cb._id;
+          option1.textContent = `${cb.name} (${cb.company})`;
+          from.appendChild(option1);
+
+          const option2 = option1.cloneNode(true);
+          to.appendChild(option2);
+        });
+      });
+
+    from.addEventListener("change", () => {
+      const selected = cashboxes.find(cb => cb._id === from.value);
+      currencyField.value = selected?.currency || '';
+    });
+
+    document.getElementById("transferForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const formData = Object.fromEntries(new FormData(e.target).entries());
+      formData.createdBy = localStorage.getItem("username");
+
+      const res = await fetch("/api/cashbox-transfer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      });
+
+      const result = await res.json();
+      if (result.success) {
+        alert("✅ تم التحويل بنجاح");
+        e.target.reset();
+      } else {
+        alert(result.message || "❌ فشل التحويل");
+      }
+    });
+  </script>
+</body>
+</html>

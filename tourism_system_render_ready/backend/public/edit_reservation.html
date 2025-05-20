@@ -1,0 +1,114 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>تعديل الحجز</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .form-section {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin: auto;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: #0d6efd;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-section">
+    <h2>تعديل حجز</h2>
+    <label>رقم الحجز:</label>
+    <input type="text" id="reservationId" placeholder="أدخل رقم الحجز" />
+    <button onclick="loadReservation()">بحث</button>
+
+    <div id="editForm" style="display:none;">
+      <label>الاسم:</label><input id="name" />
+      <label>رقم الهاتف:</label><input id="phone" />
+      <label>المدينة:</label><input id="city" />
+      <label>الفندق:</label><input id="hotel" />
+      <label>عدد الأفراد:</label><input id="peopleCount" type="number" />
+      <label>المدفوع:</label><input id="paid" type="number" />
+      <label>الملاحظات:</label><input id="notes" />
+      <button onclick="saveChanges()">حفظ التعديلات</button>
+    </div>
+  </div>
+
+  <script>
+    async function loadReservation() {
+      const id = document.getElementById("reservationId").value;
+      const res = await fetch("/api/reservation/" + id);
+      const data = await res.json();
+      if (data.success) {
+        const r = data.reservation;
+        document.getElementById("name").value = r.name || "";
+        document.getElementById("phone").value = r.phone || "";
+        document.getElementById("city").value = r.city || "";
+        document.getElementById("hotel").value = r.hotel || "";
+        document.getElementById("peopleCount").value = r.peopleCount || "";
+        document.getElementById("paid").value = r.paid || "";
+        document.getElementById("notes").value = r.notes || "";
+        document.getElementById("editForm").style.display = "block";
+      } else {
+        alert("لم يتم العثور على الحجز");
+      }
+    }
+
+    async function saveChanges() {
+      const id = document.getElementById("reservationId").value;
+      const updated = {
+        name: document.getElementById("name").value,
+        phone: document.getElementById("phone").value,
+        city: document.getElementById("city").value,
+        hotel: document.getElementById("hotel").value,
+        peopleCount: document.getElementById("peopleCount").value,
+        paid: document.getElementById("paid").value,
+        notes: document.getElementById("notes").value
+      };
+      const res = await fetch("/api/reservation/" + id, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updated)
+      });
+      const result = await res.json();
+      alert(result.message || "تم التحديث بنجاح");
+    }
+  
+    // إذا كان فيه ID في الرابط نحمله تلقائياً
+    window.addEventListener("DOMContentLoaded", () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const id = urlParams.get("id");
+      if (id) {
+        document.getElementById("reservationId").value = id;
+        loadReservation();
+      }
+    });
+    </script>
+    
+</body>
+</html>

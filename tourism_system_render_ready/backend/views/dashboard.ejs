@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>لوحة التحكم</title>
+  <style>
+    body { font-family: Tahoma; background: #f9f9f9; margin: 0; }
+    .sidebar {
+      width: 220px;
+      height: 100vh;
+      background: #2c3e50;
+      position: fixed;
+      top: 0;
+      right: 0;
+      color: white;
+      padding: 30px 10px;
+    }
+    .sidebar h2 {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .sidebar a {
+      display: block;
+      color: white;
+      padding: 12px;
+      text-decoration: none;
+      margin: 6px 0;
+      border-radius: 5px;
+    }
+    .sidebar a:hover {
+      background: #34495e;
+    }
+    .content {
+      margin-right: 240px;
+      padding: 40px;
+    }
+    .cards {
+      display: flex;
+      gap: 30px;
+      margin-top: 30px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 30px;
+      width: 250px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: center;
+      font-weight: bold;
+      font-size: 22px;
+    }
+    .blue { background: #3498db; color: white; }
+    .green { background: #2ecc71; color: white; }
+    .orange { background: #e67e22; color: white; }
+    .card p {
+      font-size: 14px;
+      margin-top: 10px;
+      font-weight: normal;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h2>Oasis Travel</h2>
+    <a href="/dashboard">لوحة التحكم</a>
+    <a href="/clients.html">العملاء</a>
+    <a href="/transport.html">النقل</a>
+    <a href="/logout">تسجيل الخروج</a>
+  </div>
+
+  <div class="content">
+    <h1>مرحبًا بك في لوحة التحكم</h1>
+    <div class="cards">
+      <div class="card blue">
+        <%= clientsToday %>
+        <p>عدد العملاء اليوم</p>
+      </div>
+      <div class="card green">
+        <%= totalMembersToday %>
+        <p>عدد الأفراد</p>
+      </div>
+      <div class="card orange">
+        <%= totalPaidToday %> جنيه
+        <p>المدفوع اليوم</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

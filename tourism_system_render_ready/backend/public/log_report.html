@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>سجل العمليات</title>
+  <style>
+    body { font-family: Arial; background: #f0f0f0; padding: 20px; }
+    h2 { text-align: center; }
+    .toolbar {
+      text-align: center; margin-bottom: 15px;
+    }
+    .toolbar input, .toolbar select, .toolbar button {
+      padding: 6px 10px; margin: 5px; border-radius: 5px;
+      border: 1px solid #ccc; cursor: pointer;
+    }
+    table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    th { background-color: #00796b; color: white; }
+  </style>
+</head>
+<body>
+  <h2>📜 سجل العمليات على الفواتير</h2>
+
+  <div class="toolbar">
+    <label>الموظف:</label>
+    <input type="text" id="filterUser" oninput="filterLogs()" placeholder="اسم المستخدم" />
+    <label>العملية:</label>
+    <select id="filterAction" onchange="filterLogs()">
+      <option value="">الكل</option>
+      <option value="تعديل">تعديل</option>
+      <option value="حذف">حذف</option>
+    </select>
+    <label>من:</label>
+    <input type="date" id="startDate" onchange="filterLogs()" />
+    <label>إلى:</label>
+    <input type="date" id="endDate" onchange="filterLogs()" />
+    <button onclick="window.print()">🖨️ طباعة</button>
+    <button onclick="exportToExcel()">📥 Excel</button>
+  </div>
+
+  <table id="logTable">
+    <thead>
+      <tr>
+        <th>رقم</th>
+        <th>نوع العملية</th>
+        <th>اسم الموظف</th>
+        <th>تاريخ العملية</th>
+        <th>رقم الفاتورة</th>
+      </tr>
+    </thead>
+    <tbody id="logTableBody"></tbody>
+  </table>
+
+  <script>
+    let allLogs = [];
+
+    async function loadLogs() {
+      const res = await fetch("/api/logs");
+      const data = await res.json();
+      if (data.success) {
+        allLogs = data.logs;
+        renderLogs(allLogs);
+      }
+    }
+
+    function filterLogs() {
+      const user = document.getElementById("filterUser").value.toLowerCase();
+      const action = document.getElementById("filterAction").value;
+      const start = document.getElementById("startDate").value;
+      const end = document.getElementById("endDate").value;
+
+      const filtered = allLogs.filter(log => {
+        const logDate = new Date(log.date);
+        return (!user || log.performedBy.toLowerCase().includes(user)) &&
+               (!action || log.action === action) &&
+               (!start || logDate >= new Date(start)) &&
+               (!end || logDate <= new Date(end));
+      });
+
+      renderLogs(filtered);
+    }
+
+    function renderLogs(logs) {
+      const tbody = document.getElementById("logTableBody");
+      tbody.innerHTML = "";
+      logs.forEach((log, i) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${i + 1}</td>
+          <td>${log.action}</td>
+          <td>${log.performedBy}</td>
+          <td>${new Date(log.date).toLocaleString()}</td>
+          <td>${log.invoiceId}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function exportToExcel() {
+      const table = document.getElementById("logTable");
+      const html = table.outerHTML.replace(/ /g, '%20');
+      const link = document.createElement("a");
+      link.href = 'data:application/vnd.ms-excel,' + html;
+      link.download = 'logs_report.xls';
+      link.click();
+    }
+
+    document.addEventListener("DOMContentLoaded", loadLogs);
+  </script>
+</body>
+</html>

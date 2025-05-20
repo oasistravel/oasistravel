@@ -1,0 +1,65 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>لوحة الحسابات</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #f8f9fa; padding: 20px; font-family: 'Segoe UI', sans-serif; }
+    h2 { color: #0d6efd; }
+    .card { box-shadow: 0 2px 6px rgba(0,0,0,0.1); border: none; }
+    .card-title { font-size: 18px; }
+    .card-value { font-size: 24px; font-weight: bold; }
+    .btn-report { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 class="text-center mb-4">لوحة الحسابات</h2>
+    <div class="row text-center">
+      <div class="col-md-3 mb-3">
+        <div class="card p-3">
+          <div class="card-title text-primary">إجمالي الإيداعات اليوم</div>
+          <div id="depositTotal" class="card-value text-success">0</div>
+        </div>
+      </div>
+      <div class="col-md-3 mb-3">
+        <div class="card p-3">
+          <div class="card-title text-danger">إجمالي المصروفات اليوم</div>
+          <div id="withdrawTotal" class="card-value text-danger">0</div>
+        </div>
+      </div>
+      <div class="col-md-3 mb-3">
+        <div class="card p-3">
+          <div class="card-title">الربح الصافي اليوم</div>
+          <div id="netProfit" class="card-value text-dark">0</div>
+        </div>
+      </div>
+      <div class="col-md-3 mb-3">
+        <div class="card p-3">
+          <div class="card-title">إجمالي أرصدة الخزن</div>
+          <div id="totalBalance" class="card-value text-dark">0</div>
+        </div>
+      </div>
+    </div>
+    <div class="text-center">
+      <a href="transactions_report_full.html" class="btn btn-primary btn-report">📊 عرض تقرير المعاملات</a>
+    </div>
+  </div>
+
+  <script>
+    async function loadSummary() {
+      const res = await fetch("/api/account-summary");
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById("depositTotal").textContent = data.deposit.toLocaleString();
+        document.getElementById("withdrawTotal").textContent = data.withdraw.toLocaleString();
+        document.getElementById("netProfit").textContent = data.net.toLocaleString();
+        document.getElementById("totalBalance").textContent = data.totalBalance.toLocaleString();
+      }
+    }
+    loadSummary();
+  </script>
+</body>
+</html>

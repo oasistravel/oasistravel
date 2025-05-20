@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>تقرير حجوزات الغرف</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+    table { width: 100%; background: white; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    th { background: #e3f2fd; }
+    select, input {
+      padding: 8px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h2>🛏️ تقرير حجوزات الغرف</h2>
+
+  <label>الفندق:</label>
+  <select id="hotelSelect" onchange="loadRoomReservations()"></select>
+
+  <label>تاريخ:</label>
+  <input type="date" id="targetDate" onchange="loadRoomReservations()" />
+
+  <table>
+    <thead>
+      <tr>
+        <th>رقم الغرفة</th>
+        <th>الحالة</th>
+      </tr>
+    </thead>
+    <tbody id="resultBody"></tbody>
+  </table>
+
+  <script>
+    async function loadHotels() {
+      const res = await fetch("/api/hotels");
+      const data = await res.json();
+      const select = document.getElementById("hotelSelect");
+      data.hotels.forEach(h => {
+        const opt = document.createElement("option");
+        opt.value = h._id;
+        opt.text = h.name + " - " + h.city;
+        select.appendChild(opt);
+      });
+      loadRoomReservations();
+    }
+
+    async function loadRoomReservations() {
+      const hotelId = document.getElementById("hotelSelect").value;
+      const date = document.getElementById("targetDate").value;
+      if (!hotelId || !date) return;
+
+      const res = await fetch("/api/rooms/" + hotelId);
+      const data = await res.json();
+      const tbody = document.getElementById("resultBody");
+      tbody.innerHTML = "";
+
+      data.rooms.forEach(r => {
+        const isBooked = r.bookedDates?.some(d => (new Date(d)).toISOString().slice(0,10) === date);
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${r.roomNumber}</td>
+          <td>${isBooked ? "محجوزة" : "متاحة"}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", loadHotels);
+  </script>
+</body>
+</html>

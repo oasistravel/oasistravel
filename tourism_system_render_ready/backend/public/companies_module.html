@@ -1,0 +1,101 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>إدارة الشركات</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: 'Cairo', sans-serif; background-color: #f4f4f4; padding: 30px; text-align: center; }
+    h2 { margin-bottom: 25px; }
+    .section { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 8px #ccc; margin-bottom: 30px; }
+    form input, form textarea, form button { width: 100%; padding: 10px; margin: 10px 0; font-size: 16px; max-width: 400px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 10px; }
+    th { background: #eee; }
+    .actions button { margin: 0 5px; }
+  </style>
+</head>
+<body>
+
+  <h2>🏢 نظام إدارة الشركات</h2>
+
+  <div class="section">
+    <h3>➕ إضافة شركة جديدة</h3>
+    <form id="companyForm">
+      <input type="text" id="companyName" placeholder="اسم الشركة" required />
+      <input type="text" id="companyContact" placeholder="وسيلة التواصل" />
+      <textarea id="companyNote" placeholder="ملاحظات"></textarea>
+      <button type="submit">💾 حفظ</button>
+    </form>
+  </div>
+
+  <div class="section">
+    <h3>📋 قائمة الشركات</h3>
+    <table>
+      <thead><tr><th>الاسم</th><th>التواصل</th><th>ملاحظات</th><th>عمليات</th></tr></thead>
+      <tbody id="companyTableBody"></tbody>
+    </table>
+  </div>
+
+<script>
+let editId = null;
+
+document.getElementById("companyForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+  const data = {
+    name: document.getElementById("companyName").value,
+    contact: document.getElementById("companyContact").value,
+    note: document.getElementById("companyNote").value
+  };
+
+  const method = editId ? "PUT" : "POST";
+  const url = editId ? "/api/companies/" + editId : "/api/companies";
+
+  fetch(url, {
+    method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)
+  }).then(() => {
+    this.reset(); editId = null;
+    loadCompanies();
+  });
+});
+
+function loadCompanies() {
+  fetch("/api/companies").then(res => res.json()).then(data => {
+    const body = document.getElementById("companyTableBody");
+    body.innerHTML = "";
+    data.forEach(c => {
+      body.innerHTML += `
+        <tr>
+          <td>${c.name}</td>
+          <td>${c.contact}</td>
+          <td>${c.note || ""}</td>
+          <td class="actions">
+            <button onclick="editCompany('${c._id}', '${c.name}', '${c.contact}', '${c.note || ""}')">✏️</button>
+            <button onclick="deleteCompany('${c._id}')">🗑</button>
+          </td>
+        </tr>
+      `;
+    });
+  });
+}
+
+function editCompany(id, name, contact, note) {
+  document.getElementById("companyName").value = name;
+  document.getElementById("companyContact").value = contact;
+  document.getElementById("companyNote").value = note;
+  editId = id;
+}
+
+function deleteCompany(id) {
+  if (!confirm("هل تريد حذف الشركة؟")) return;
+  fetch("/api/companies/" + id, { method: "DELETE" }).then(loadCompanies);
+}
+
+window.onload = loadCompanies;
+</script>
+
+<script src="/role-check.js"></script>
+<script>protectPage(["admin"])</script>
+</body>
+</html>

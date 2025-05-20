@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تعديل بيانات العميل</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+    .form-box {
+      background: white; padding: 20px; max-width: 500px;
+      margin: auto; border-radius: 10px; box-shadow: 0 0 5px #ccc;
+    }
+    input, select {
+      width: 100%; padding: 10px; margin-top: 10px;
+      border: 1px solid #ccc; border-radius: 6px;
+    }
+    button {
+      padding: 10px 20px; margin-top: 15px;
+      background: #0d6efd; color: white; border: none;
+      border-radius: 6px; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-box">
+    <h2>تعديل بيانات العميل</h2>
+    <label>الاسم:</label>
+    <input type="text" id="name" />
+    <label>رقم الهاتف:</label>
+    <input type="text" id="phone" />
+    <label>المدينة:</label>
+    <input type="text" id="city" />
+    <label>ملاحظات:</label>
+    <input type="text" id="notes" />
+    <button onclick="saveCustomer()">حفظ التعديلات</button>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const customerId = urlParams.get("id");
+
+    async function loadCustomer() {
+      const res = await fetch("/api/customers/" + customerId);
+      const data = await res.json();
+      if (data.success) {
+        const c = data.customer;
+        document.getElementById("name").value = c.name || "";
+        document.getElementById("phone").value = c.phone || "";
+        document.getElementById("city").value = c.city || "";
+        document.getElementById("notes").value = c.notes || "";
+      } else {
+        alert("تعذر تحميل بيانات العميل");
+      }
+    }
+
+    async function saveCustomer() {
+      const updated = {
+        name: document.getElementById("name").value,
+        phone: document.getElementById("phone").value,
+        city: document.getElementById("city").value,
+        notes: document.getElementById("notes").value
+      };
+
+      const res = await fetch("/api/customers/" + customerId, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updated)
+      });
+
+      const result = await res.json();
+      if (result.success) {
+        alert("تم حفظ التعديلات");
+        window.location.href = "manage_customers.html";
+      } else {
+        alert("فشل الحفظ");
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadCustomer);
+  </script>
+</body>
+</html>

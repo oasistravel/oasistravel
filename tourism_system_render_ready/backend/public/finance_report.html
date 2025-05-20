@@ -1,0 +1,97 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تقرير الإيرادات والمصروفات</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: 'Cairo', sans-serif; padding: 30px; background: #f7f7f7; text-align: center; }
+    h3 { margin-bottom: 20px; }
+    .filters { margin-bottom: 20px; }
+    .filters input, .filters select { padding: 5px; font-size: 16px; }
+    table { width: 90%; margin: 20px auto; border-collapse: collapse; background: #fff; }
+    th, td { border: 1px solid #ddd; padding: 10px; }
+    th { background-color: #eee; }
+    .summary { margin-top: 30px; background: #fff; padding: 20px; display: inline-block; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
+    .summary p { font-size: 18px; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h3>💰 تقرير الإيرادات والمصروفات</h3>
+
+  <div class="filters">
+    <label>التاريخ:</label>
+    <input type="date" id="reportDate" />
+    <button onclick="loadFinance()">عرض التقرير</button>
+  </div>
+
+  <h4>📋 الإيرادات (من الحجوزات)</h4>
+  <table>
+    <thead>
+      <tr><th>اسم العميل</th><th>التاريخ</th><th>المدينة</th><th>المدفوع</th></tr>
+    </thead>
+    <tbody id="incomeTableBody"></tbody>
+  </table>
+
+  <h4>📋 المصروفات</h4>
+  <table>
+    <thead>
+      <tr><th>البند</th><th>القيمة</th><th>التاريخ</th></tr>
+    </thead>
+    <tbody id="expenseTableBody"></tbody>
+  </table>
+
+  <div class="summary">
+    <p>💵 إجمالي الإيرادات: <span id="totalIncome">0</span> جنيه</p>
+    <p>💸 إجمالي المصروفات: <span id="totalExpenses">0</span> جنيه</p>
+    <p><strong>📊 صافي الربح: <span id="netProfit">0</span> جنيه</strong></p>
+  </div>
+
+<script>
+function loadFinance() {
+  const date = document.getElementById("reportDate").value;
+  if (!date) return alert("اختر التاريخ أولاً");
+
+  Promise.all([
+    fetch("/api/report/income?date=" + date).then(res => res.json()),
+    fetch("/api/report/expenses?date=" + date).then(res => res.json())
+  ]).then(([incomes, expenses]) => {
+    let incomeTotal = 0;
+    let expenseTotal = 0;
+
+    const incomeTable = document.getElementById("incomeTableBody");
+    incomeTable.innerHTML = "";
+    incomes.forEach(item => {
+      incomeTotal += item.paid;
+      incomeTable.innerHTML += `<tr>
+        <td>${item.customer?.name || ""}</td>
+        <td>${item.travelDate}</td>
+        <td>${item.city}</td>
+        <td>${item.paid}</td>
+      </tr>`;
+    });
+
+    const expenseTable = document.getElementById("expenseTableBody");
+    expenseTable.innerHTML = "";
+    expenses.forEach(exp => {
+      expenseTotal += exp.amount;
+      expenseTable.innerHTML += `<tr>
+        <td>${exp.category}</td>
+        <td>${exp.amount}</td>
+        <td>${exp.date}</td>
+      </tr>`;
+    });
+
+    document.getElementById("totalIncome").innerText = incomeTotal;
+    document.getElementById("totalExpenses").innerText = expenseTotal;
+    document.getElementById("netProfit").innerText = incomeTotal - expenseTotal;
+  });
+}
+</script>
+
+<script src="/role-check.js"></script>
+<script>protectPage(['admin', 'accountant']);</script>
+</body>
+
+</html>

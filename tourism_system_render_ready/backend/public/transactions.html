@@ -1,0 +1,122 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تقرير المعاملات الكامل</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    body { background-color: #f4f6f9; padding: 30px; font-family: 'Segoe UI', sans-serif; }
+    h2 { color: #0d6efd; margin-bottom: 20px; }
+    .table th, .table td { vertical-align: middle !important; }
+    .filter { margin-bottom: 15px; }
+  </style>
+</head>
+<body>
+  <div class="container" id="reportContent">
+    <h2 class="text-center">📊 تقرير المعاملات الكامل</h2>
+
+    <div class="row filter">
+      <div class="col-md-3">
+        <label>نوع العملية</label>
+        <select class="form-control" id="typeFilter">
+          <option value="all">الكل</option>
+          <option value="in">إيداع</option>
+          <option value="out">سحب</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label>من تاريخ</label>
+        <input type="date" class="form-control" id="startDate">
+      </div>
+      <div class="col-md-3">
+        <label>إلى تاريخ</label>
+        <input type="date" class="form-control" id="endDate">
+      </div>
+      <div class="col-md-3 d-flex align-items-end">
+        <button class="btn btn-primary w-100" onclick="loadTransactions()">🔍 عرض</button>
+      </div>
+    </div>
+
+    <div class="text-end mb-3">
+      <button class="btn btn-success" onclick="exportToExcel()">📥 Excel</button>
+      <button class="btn btn-secondary" onclick="exportToPDF()">📄 PDF</button>
+      <button class="btn btn-outline-dark" onclick="window.print()">🖨️ طباعة</button>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-bordered text-center align-middle" id="transactionTable">
+        <thead class="table-light">
+          <tr>
+            <th>التاريخ</th>
+            <th>العملية</th>
+            <th>المبلغ</th>
+            <th>العملة</th>
+            <th>الوصف</th>
+            <th>الخزنة</th>
+            <th>المستخدم</th>
+          </tr>
+        </thead>
+        <tbody id="transactionBody">
+          <tr><td colspan="7">جاري التحميل...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    async function loadTransactions() {
+      const type = document.getElementById("typeFilter").value;
+      const startDate = document.getElementById("startDate").value;
+      const endDate = document.getElementById("endDate").value;
+      let url = "/api/transactions?type=" + type;
+      if (startDate) url += "&startDate=" + startDate;
+      if (endDate) url += "&endDate=" + endDate;
+
+      const res = await fetch(url);
+      const data = await res.json();
+      const tbody = document.getElementById("transactionBody");
+      tbody.innerHTML = "";
+
+      if (data.success && data.list.length > 0) {
+        data.list.forEach(t => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${new Date(t.date).toLocaleDateString()}</td>
+            <td>${t.type === "in" ? "إيداع" : "سحب"}</td>
+            <td>${t.amount.toLocaleString()}</td>
+            <td>${t.currency}</td>
+            <td>${t.description || "-"}</td>
+            <td>${t.cashboxId?.name || "-"}</td>
+            <td>${t.createdBy || "-"}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      } else {
+        tbody.innerHTML = '<tr><td colspan="7">لا توجد بيانات</td></tr>';
+      }
+    }
+
+    function exportToExcel() {
+      const table = document.getElementById("transactionTable");
+      const wb = XLSX.utils.table_to_book(table, { sheet: "المعاملات" });
+      XLSX.writeFile(wb, "تقرير_المعاملات.xlsx");
+    }
+
+    function exportToPDF() {
+      const content = document.getElementById("reportContent");
+      html2pdf().from(content).save("تقرير_المعاملات.pdf");
+    }
+
+    // ✅ حماية عرض الأزرار حسب الصلاحية
+    const userRole = localStorage.getItem("userRole");
+    if (userRole === "viewer" || userRole === "sales") {
+      document.querySelector(".btn-success").style.display = "none";
+    }
+
+    loadTransactions();
+  </script>
+</body>
+</html>

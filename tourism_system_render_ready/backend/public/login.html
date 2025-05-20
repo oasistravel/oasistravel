@@ -1,0 +1,49 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تسجيل الدخول</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: 'Cairo', sans-serif; background-color: #eee; display: flex; align-items: center; justify-content: center; height: 100vh; }
+    .login-box { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px #aaa; width: 320px; }
+    h3 { text-align: center; margin-bottom: 20px; }
+    input, button { width: 100%; padding: 10px; margin-bottom: 15px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h3>🔐 تسجيل الدخول</h3>
+    <input type="text" id="username" placeholder="اسم المستخدم" required />
+    <input type="password" id="password" placeholder="كلمة المرور" required />
+    <button onclick="login()">دخول</button>
+    <p id="error" style="color: red;"></p>
+  </div>
+
+<script>
+function login() {
+  const data = {
+    username: document.getElementById("username").value,
+    password: document.getElementById("password").value
+  };
+
+  fetch("/api/login", {
+    method: "POST",
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  })
+  .then(res => res.json())
+  .then(result => {
+    if (result.success) {
+      localStorage.setItem("username", result.username);
+      localStorage.setItem("role", result.role);
+      window.location.href = "/dashboard.html";
+    } else {
+      document.getElementById("error").innerText = result.message || "فشل في الدخول";
+    }
+  });
+}
+</script>
+</body>
+</html>

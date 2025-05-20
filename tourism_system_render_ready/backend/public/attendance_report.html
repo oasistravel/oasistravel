@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تقرير الحضور</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9fafb;
+      padding: 30px;
+      direction: rtl;
+    }
+    h1 {
+      text-align: center;
+      color: #1e40af;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+      background-color: white;
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      text-align: center;
+    }
+    th {
+      background-color: #1e3a8a;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background-color: #f1f5f9;
+    }
+  </style>
+</head>
+<body>
+  <h1>تقرير الحضور</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>اسم الموظف</th>
+        <th>التاريخ</th>
+        <th>وقت الدخول</th>
+        <th>وقت الخروج</th>
+        <th>عدد الساعات</th>
+      </tr>
+    </thead>
+    <tbody id="reportBody"></tbody>
+  </table>
+
+  <script>
+    function calcHours(timeIn, timeOut) {
+      if (!timeIn || !timeOut) return "-";
+      const [inH, inM, inS] = timeIn.split(":").map(Number);
+      const [outH, outM, outS] = timeOut.split(":").map(Number);
+      const start = new Date(0, 0, 0, inH, inM, inS);
+      const end = new Date(0, 0, 0, outH, outM, outS);
+      const diffMs = end - start;
+      if (diffMs <= 0) return "-";
+      const hours = Math.floor(diffMs / 3600000);
+      const mins = Math.floor((diffMs % 3600000) / 60000);
+      return hours + " ساعة " + (mins > 0 ? mins + " دقيقة" : "");
+    }
+
+    async function loadReport() {
+      const res = await fetch("/api/attendance-report");
+      const data = await res.json();
+      const tbody = document.getElementById("reportBody");
+
+      if (!data.success) {
+        tbody.innerHTML = "<tr><td colspan='5'>فشل في تحميل التقرير</td></tr>";
+        return;
+      }
+
+      data.data.forEach(record => {
+        const row = document.createElement("tr");
+        const date = new Date(record.date).toLocaleDateString();
+        const hours = calcHours(record.timeIn, record.timeOut);
+        row.innerHTML = `
+          <td>${record.username || "-"}</td>
+          <td>${date}</td>
+          <td>${record.timeIn || "-"}</td>
+          <td>${record.timeOut || "-"}</td>
+          <td>${hours}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    loadReport();
+  </script>
+</body>
+</html>

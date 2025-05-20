@@ -1,0 +1,16 @@
+
+<!-- إضافة عمود زر التفاصيل في الجدول -->
+<th>الإجراء</th>
+
+<!-- داخل كل صف -->
+<td>
+  <button onclick="viewInvoiceDetails('[[INVOICE_ID]]')">عرض التفاصيل</button>
+</td>
+
+<!-- سكريبت لتحويل المستخدم إلى صفحة التفاصيل -->
+<script>
+  function viewInvoiceDetails(invoiceId) {
+    localStorage.setItem("selectedInvoiceId", invoiceId);
+    window.location.href = "invoice_details.html";
+  }
+</script>

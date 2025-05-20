@@ -1,0 +1,76 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تسجيل الحضور والانصراف</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to left, #f0f9ff, #e0f2fe);
+      text-align: center;
+      padding: 50px;
+    }
+    h1 {
+      color: #1d4ed8;
+    }
+    input {
+      padding: 10px;
+      font-size: 16px;
+      width: 200px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background-color: #2563eb;
+      color: white;
+    }
+    button:hover {
+      background-color: #1d4ed8;
+    }
+    #message {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>تسجيل الحضور والانصراف</h1>
+  <input type="text" id="username" placeholder="اسم المستخدم">
+  <br>
+  <button onclick="checkIn()">🟢 تسجيل دخول</button>
+  <button onclick="checkOut()">🔴 تسجيل خروج</button>
+  <div id="message"></div>
+
+  <script>
+    async function checkIn() {
+      const username = document.getElementById("username").value;
+      const res = await fetch("/api/attendance/in", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username })
+      });
+      const data = await res.json();
+      document.getElementById("message").textContent = data.message;
+    }
+
+    async function checkOut() {
+      const username = document.getElementById("username").value;
+      const res = await fetch("/api/attendance/out", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username })
+      });
+      const data = await res.json();
+      document.getElementById("message").textContent = data.message;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>إضافة مستخدم جديد</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f3f4f6;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      background-color: #fff;
+      padding: 25px;
+      max-width: 500px;
+      margin: auto;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #1e3a8a;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 20px;
+      background-color: #1e40af;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #1e3a8a;
+    }
+    .success, .error {
+      margin-top: 15px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .success { color: green; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>إضافة مستخدم جديد</h2>
+    <form id="userForm">
+      <label>اسم المستخدم</label>
+      <input type="text" id="username" required>
+
+      <label>كلمة المرور</label>
+      <input type="password" id="password" required>
+
+      <label>الصلاحية</label>
+      <select id="role" required>
+        <option value="admin">مدير</option>
+        <option value="editor">محرر</option>
+        <option value="viewer">مشاهد</option>
+        <option value="sales">مندوب مبيعات</option>
+      </select>
+
+      <button type="submit">إضافة</button>
+      <div id="msg" class=""></div>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById("userForm").addEventListener("submit", async function(event) {
+      event.preventDefault();
+
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const role = document.getElementById("role").value;
+
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password, role })
+      });
+
+      const data = await res.json();
+      const msg = document.getElementById("msg");
+
+      if (data.success) {
+        msg.className = "success";
+        msg.textContent = "✅ تم إضافة المستخدم بنجاح";
+        document.getElementById("userForm").reset();
+      } else {
+        msg.className = "error";
+        msg.textContent = "❌ " + (data.message || "فشل في إضافة المستخدم");
+      }
+    });
+  </script>
+</body>
+</html>

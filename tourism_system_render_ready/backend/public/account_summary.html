@@ -1,0 +1,62 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>📊 التقرير المالي اليومي</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+</head>
+<body class="bg-light p-4">
+  <div class="container bg-white p-4 rounded shadow">
+    <h3 class="text-center text-primary mb-4">📊 التقرير المالي اليومي</h3>
+
+    <div class="row g-4" id="reportCards">
+      <div class="col-md-3">
+        <div class="card border-success shadow-sm">
+          <div class="card-body text-center">
+            <h5 class="card-title text-success">💰 إجمالي الإيداعات</h5>
+            <h4 id="deposit">0</h4>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-danger shadow-sm">
+          <div class="card-body text-center">
+            <h5 class="card-title text-danger">💸 إجمالي المصروفات</h5>
+            <h4 id="withdraw">0</h4>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-info shadow-sm">
+          <div class="card-body text-center">
+            <h5 class="card-title text-info">🧾 صافي الربح / العجز</h5>
+            <h4 id="net">0</h4>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-primary shadow-sm">
+          <div class="card-body text-center">
+            <h5 class="card-title text-primary">🏦 إجمالي أرصدة الخزن</h5>
+            <h4 id="balance">0</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    fetch("/api/account-summary").then(res => res.json()).then(data => {
+      if (data.success) {
+        document.getElementById("deposit").textContent = data.deposit.toLocaleString();
+        document.getElementById("withdraw").textContent = data.withdraw.toLocaleString();
+        document.getElementById("net").textContent = data.net.toLocaleString();
+        document.getElementById("balance").textContent = data.totalBalance.toLocaleString();
+      } else {
+        alert("❌ فشل في تحميل التقرير");
+      }
+    });
+  </script>
+</body>
+</html>

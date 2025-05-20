@@ -1,0 +1,143 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>إدارة المستخدمين</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f3f4f6;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #1e3a8a;
+    }
+    .filter {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+    th {
+      background-color: #e5e7eb;
+    }
+    button {
+      padding: 5px 10px;
+      margin: 2px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .edit-btn {
+      background-color: #2563eb;
+      color: white;
+    }
+    .delete-btn {
+      background-color: #dc2626;
+      color: white;
+    }
+    select {
+      padding: 8px;
+      font-size: 15px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h2>إدارة المستخدمين</h2>
+
+  <div class="filter">
+    <label>فلترة حسب الصلاحية:</label>
+    <select id="roleFilter" onchange="loadUsers()">
+      <option value="all">الكل</option>
+      <option value="admin">مدير</option>
+      <option value="editor">محرر</option>
+      <option value="viewer">مشاهد</option>
+      <option value="sales">مندوب مبيعات</option>
+    </select>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>الاسم</th>
+        <th>الصلاحية</th>
+        <th>إجراءات</th>
+      </tr>
+    </thead>
+    <tbody id="userTableBody"></tbody>
+  </table>
+
+  <script>
+    async function loadUsers() {
+      const role = document.getElementById("roleFilter").value;
+      const res = await fetch("/api/all-users");
+      const data = await res.json();
+      const tbody = document.getElementById("userTableBody");
+      tbody.innerHTML = "";
+
+      let filtered = data.users;
+      if (role !== "all") {
+        filtered = data.users.filter(user => user.role === role);
+      }
+
+      filtered.forEach(user => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${user.username}</td>
+          <td>${user.role}</td>
+          <td>
+            <button class="edit-btn" onclick="editUser('${user._id}', '${user.username}', '${user.role}')">📝 تعديل</button>
+            <button class="delete-btn" onclick="deleteUser('${user._id}')">🗑️ حذف</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    async function deleteUser(id) {
+      if (confirm("هل أنت متأكد أنك تريد حذف هذا المستخدم؟")) {
+        const res = await fetch("/api/users/" + id, { method: "DELETE" });
+        const data = await res.json();
+        if (data.success) {
+          alert("✅ تم الحذف بنجاح");
+          loadUsers();
+        } else {
+          alert("❌ فشل الحذف");
+        }
+      }
+    }
+
+    function editUser(id, username, role) {
+      const newUsername = prompt("تعديل اسم المستخدم:", username);
+      const newRole = prompt("تعديل الصلاحية (admin/editor/viewer/sales):", role);
+      if (newUsername && newRole) {
+        fetch("/api/users/" + id, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: newUsername, role: newRole })
+        }).then(res => res.json()).then(data => {
+          if (data.success) {
+            alert("✅ تم التعديل بنجاح");
+            loadUsers();
+          } else {
+            alert("❌ فشل التعديل");
+          }
+        });
+      }
+    }
+
+    window.onload = loadUsers;
+  </script>
+</body>
+</html>
