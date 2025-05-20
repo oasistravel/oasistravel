@@ -1,14 +1,13 @@
 {
-  "name": "tourism-system-final",
+  "name": "oasistravel-backend",
   "version": "1.0.0",
-  "description": "Final tourism management system",
-  "main": "server/server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node server/server.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "mongoose": "^7.0.0",
-    "cors": "^2.8.5"
+    "mongoose": "^7.0.4",
+    "express-session": "^1.17.3"
   }
 }
