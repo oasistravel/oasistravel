@@ -1,10 +1,10 @@
-
 services:
   - type: web
-    name: oasis-tourism-backend
+    name: oasis-travel
     env: node
     buildCommand: cd backend && npm install
-    startCommand: node backend/server.js
+    startCommand: node server.js
+    workingDir: backend
     envVars:
       - key: NODE_VERSION
         value: 18
